@@ -26,6 +26,7 @@ yarn install
 127.0.0.1 api.blinddeez.develop
 ```
 Authorize `.dev/cert.pem` with your trusted key manager for use __https__
+*If you have Linux system and it's too boring to add cert use [mkcert](https://github.com/FiloSottile/mkcert)*
 
 ## Usage
 
