@@ -2,7 +2,7 @@ import { compare } from 'bcrypt';
 import { sign, verify } from 'jsonwebtoken';
 
 import isEmail from '@blinddeez/api-core/utils/validate';
-import { Account, Company, User, Jobber } from '@blinddeez/api-core/models';
+import { User } from '@blinddeez/api-core/models';
 import { assert } from '@blinddeez/api-core/utils/assert';
 import {
   BadRequest,
@@ -20,52 +20,34 @@ const grantWithPassword = async (req, res) => {
   const email = assert(req.body.email, BadRequest('invalid_request'), isEmail);
   const password = assert(req.body.password, BadRequest('invalid_request'));
 
-  const account = assert(
-    await Account.findOne({ email }),
-    NotFound('account_not_found')
+  const user = assert(
+    await User.findOne({ email }),
+    NotFound('user_not_found')
   );
-  const cmp = await compare(password, account.password);
+  const cmp = await compare(password, user.password);
 
   if (!cmp) {
     throw Unauthorized('access_denied');
   }
 
-  let user = account.type === 'TYPE_COMPANY'
-    ? assert(
-      await Company.findOne({ account }),
-      NotFound('company_not_found')
-    )
-    : assert(
-      await User.findOne({ account }),
-      NotFound('account_not_found')
-    );
-
-  if (account.type === 'TYPE_JOBBER') {
-    user = assert(
-      await Jobber.findOne({ user }),
-      NotFound('account_not_found')
-    );
-  }
-
   const accessToken = await sign(
     {
       user_id: user._id,
-      type: account.type,
       email,
     },
     TOKEN_KEY,
     { expiresIn: TOKEN_NORMAL_EXPIRY }
   );
 
-  const salt = await account.genSalt();
+  const salt = await user.genSalt();
 
   const refreshToken = await sign({ salt: salt }, REFRESH_TOKEN_KEY,
     { expiresIn: TOKEN_EXTENDED_EXPIRY });
 
-  account.access_token = accessToken;
-  account.refresh_token = refreshToken;
-  account.refresh_token_salt = salt;
-  await account.save();
+  user.access_token = accessToken;
+  user.refresh_token = refreshToken;
+  user.refresh_token_salt = salt;
+  await user.save();
 
   res.json({
     accessToken: accessToken,
@@ -90,7 +72,7 @@ export const refresh = async (req, res) => {
   const refreshToken = assert(req.body.refresh_token,
     BadRequest('invalid_request'));
 
-  const user = assert(await Account.findOne({
+  const user = assert(await User.findOne({
     access_token: accessToken,
     refresh_token: refreshToken,
   }), NotFound('refresh_token_not_found'));
