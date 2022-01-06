@@ -4,8 +4,14 @@ const User = new mongoose.Schema({
 
   users: [
     {
-      type:  mongoose.Schema.ObjectId, required: true, ref: 'User',
-      required: true,
+      user : {
+        type:  mongoose.Schema.ObjectId, required: true, ref: 'User',
+        required: true,
+      },
+      points: {
+        type: Number,
+        default: 0
+      }
     }
   ],
 
@@ -33,14 +39,8 @@ const User = new mongoose.Schema({
 
   tracks: [
     {
-      name: {
-        type: String,
-        required: true,
-      },
-      artist: {
-        type: String,
-        required: true,
-      },
+      type: String,
+      required: true,
     }
   ],
 
