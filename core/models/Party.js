@@ -77,13 +77,22 @@ const Party = new mongoose.Schema({
     required: true,
   },
 
+  code: {
+    type: String,
+  },
+
   tracks: [{
     type: String,
   }],
 
-  pending: {
-    type: Boolean,
-    default: true,
+  status: {
+    type: String,
+    default: 'pending',
+    enum: [
+      'pending',
+      'in_game',
+      'archived',
+    ],
   },
 
   created_at: {
@@ -97,8 +106,8 @@ Party.statics.from = function (opts) {
   return new this(opts);
 };
 
-Party.statics.genGuest = function () {
-  return `guset-${generate(5)}`;
+Party.statics.genCode = function (n = 5) {
+  return generate(n);
 };
 
 export default mongoose.model('Party', Party);

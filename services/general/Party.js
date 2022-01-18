@@ -24,10 +24,10 @@ export const create = async (req, res) => {
     master_user: masterUser,
   }).save();
 
-  socket.join(createdParty._id);
+  socket.join(createdParty._id.toString());
   log('bgBlue', `${masterUser.username} Create a party`);
 
-  res.json({ created: true });
+  res.json({ created: true, room: createdParty._id });
 };
 
 export const get = async (req, res) => {
@@ -110,25 +110,52 @@ export const editPublic = async (req, res) => {
 
   party.public = isPublic;
 
-  socket.emit('edit_public', isPublic);
+  if (isPublic && party?.code) {
+    delete party.code;
+  } else if (!isPublic) {
+    party.code = Party.genCode();
+  }
+
+  socket.to(party._id.toString())
+    .emit('edit_public', { isPublic, code: party.code });
 
   await party.save();
 
   res.json({ party });
 };
 
-export const editPlayers = async (req, res) => {
+export const editPlayers = async (req, res, next) => {
   const partyId = assert(req.params.id, BadRequest('wrong_party_id'),
     val => mongoose.Types.ObjectId.isValid(val));
-  const player = assert(req.body.player, BadRequest('invalid_request'));
-  const editType = assert(req.body.edit_type, BadRequest('invalid_request'));
-
-  const socket = req.app.get('Socket');
 
   const party = assert(
     await Party.findOne({ _id: partyId }),
     NotFound('party_not_found')
   );
+
+  return req.app.get('Brute').prevent(req, res, async () => {
+    try {
+      if (party.public) {
+        await editPlayersWithoutCode(req, res, party);
+      } else {
+        await editPlayersWithCode(req, res, party);
+      }
+    } catch (e) {
+      next(e, req, res, next);
+    }
+  });
+};
+
+const editPlayersWithCode = async (req, res, party) => {
+  const player = assert(req.body.player, BadRequest('invalid_request'));
+  const editType = assert(req.body.edit_type, BadRequest('invalid_request'));
+  const code = assert(req.body.code, BadRequest('invalid_request'));
+
+  const socket = req.app.get('Socket');
+
+  if (code !== party.code) {
+    throw NotFound('wrong_code');
+  }
 
   let playersUpdated = party.users;
 
@@ -140,7 +167,7 @@ export const editPlayers = async (req, res) => {
       if (!exist) {
         playersUpdated.push(player);
 
-        socket.emit('add_player', player);
+        socket.to(party._id.toString()).emit('add_player', player);
       }
 
       break;
@@ -153,7 +180,52 @@ export const editPlayers = async (req, res) => {
         playersUpdated = party.users.filter(
           obj => obj.username !== player.username);
 
-        socket.emit('delete_player', player);
+        socket.to(party._id.toString()).emit('delete_player', player);
+      }
+
+      break;
+    }
+    default:
+
+  }
+
+  party.users = playersUpdated;
+
+  await party.save();
+
+  res.json({ party });
+};
+
+const editPlayersWithoutCode = async (req, res, party) => {
+  const player = assert(req.body.player, BadRequest('invalid_request'));
+  const editType = assert(req.body.edit_type, BadRequest('invalid_request'));
+
+  const socket = req.app.get('Socket');
+
+  let playersUpdated = party.users;
+
+  switch (editType) {
+    case 'add': {
+      const exist = playersUpdated.find(obj =>
+        obj.username === player.username);
+
+      if (!exist) {
+        playersUpdated.push(player);
+
+        socket.to(party._id.toString()).emit('add_player', player);
+      }
+
+      break;
+    }
+    case 'delete': {
+      const exist = playersUpdated.find(obj =>
+        obj.username === player.username);
+
+      if (exist) {
+        playersUpdated = party.users.filter(
+          obj => obj.username !== player.username);
+
+        socket.to(party._id.toString()).emit('delete_player', player);
       }
 
       break;
