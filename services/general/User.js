@@ -30,14 +30,14 @@ export const create = async (req, res) => {
 
   await user.save();
 
-  req.app.get('Sendgrid').send({
-    from: EMAIL_SENDER,
-    to: account.email,
-    subject: 'Welcome',
-    body: load('emails/welcome', {
-      user: `${user.username}`,
-    }),
-  });
+  // req.app.get('Sendgrid').send({
+  //   from: EMAIL_SENDER,
+  //   to: user.email,
+  //   subject: 'Welcome',
+  //   body: load('emails/welcome', {
+  //     user: `${user.username}`,
+  //   }),
+  // });
 
   res.json({ created: true });
 };
@@ -78,7 +78,7 @@ export const update = async (req, res) => {
   Object.assign(user, {
     ...userInfo,
     email,
-    password
+    password,
   });
 
   await user.save();

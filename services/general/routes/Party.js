@@ -1,7 +1,7 @@
-import {
-  AuthInterceptor,
-  IdentityInterceptor,
-} from '@blinddeez/api-core/interceptors';
+// import {
+//   AuthInterceptor,
+//   IdentityInterceptor,
+// } from '@blinddeez/api-core/interceptors';
 
 import * as Party from '../Party';
 
@@ -9,8 +9,8 @@ export default {
 
   'POST /general/party': {
     interceptors: [
-      AuthInterceptor(),
-      IdentityInterceptor,
+      // AuthInterceptor(),
+      // IdentityInterceptor,
     ],
     handle: Party.create,
   },
@@ -22,17 +22,42 @@ export default {
 
   'GET /general/party/:id': {
     interceptors: [
-      AuthInterceptor(),
-      IdentityInterceptor,
+      // AuthInterceptor(),
+      // IdentityInterceptor,
     ],
     handle: Party.get,
   },
 
   'DELETE /general/party/:id': {
     interceptors: [
-      AuthInterceptor(),
-      IdentityInterceptor,
+      // AuthInterceptor(),
+      // IdentityInterceptor,
     ],
     handle: Party.remove,
   },
+
+  'PATCH /general/party/:id/name': {
+    interceptors: [
+      // AuthInterceptor(),
+      // IdentityInterceptor,
+    ],
+    handle: Party.editName,
+  },
+
+  'PATCH /general/party/:id/public': {
+    interceptors: [
+      // AuthInterceptor(),
+      // IdentityInterceptor,
+    ],
+    handle: Party.editPublic,
+  },
+
+  'PATCH /general/party/:id/player': {
+    interceptors: [
+      // AuthInterceptor(),
+      // IdentityInterceptor,
+    ],
+    handle: Party.editPlayers,
+  },
+
 };

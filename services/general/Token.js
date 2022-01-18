@@ -62,6 +62,7 @@ export const login = async (req, res, next) => {
       await grantWithPassword(req, res);
     } catch (e) {
       next(e, req, res, next);
+      console.log(e);
     }
   });
 };

@@ -45,12 +45,7 @@ const buildConfig = webpackConfig({
 const compiler = webpack({
   ...buildConfig,
   entry: {
-    devserver: './.dev/server.js',
-    ...argv._.reduce((entries, name) => {
-      entries[name] = `./services/${name}/index.js`;
-
-      return entries;
-    }, {}),
+    general: './services/general/index.js',
   },
 });
 
@@ -62,12 +57,14 @@ const startWatcher = () => {
     );
 
   serverPaths
-    .map(entry => spawn('./node_modules/.bin/nodemon', [
-      '-q',
-      '--watch', entry,
-      '--watch', path.resolve('.env'),
-      '--exec', `node -e "require('${path.resolve(entry)}').default();"`,
-    ], { stdio: 'inherit' }));
+    .map(entry => {
+      return spawn('./node_modules/.bin/nodemon', [
+        '-q',
+        '--watch', entry,
+        '--watch', path.resolve('.env'),
+        '--exec', `node -e "require('${path.resolve(entry)}').default({});"`,
+      ], { stdio: 'inherit' });
+    });
 };
 
 compiler.watch(buildConfig.watchOptions, once(err => {

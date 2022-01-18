@@ -1,6 +1,9 @@
 import './config';
 
-import http from 'http';
+import fs from 'fs';
+import path from 'path';
+// import http from 'http';
+import https from 'https';
 import events from 'events';
 
 import colors from 'colors/safe';
@@ -9,6 +12,7 @@ import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 
+import Socket from '../core/connectors/Socket';
 import { ErrorsInterceptor, DefaultsInterceptor } from './interceptors';
 import { TEST } from './utils/env';
 import { catchError } from './utils/errors';
@@ -45,6 +49,13 @@ export default async ({
 
   const router = express.Router();
 
+  app.use((req, res, next) => {
+    console.log(colors.green(
+      '[blinddeez.devserver] Requesting ' + req.originalUrl
+    ));
+    next();
+  });
+
   Object.entries(routes).map(([route, options]) => {
     options = typeof options === 'function'
       ? { handle: options }
@@ -70,14 +81,23 @@ export default async ({
     res.send('OK');
   });
 
+  router.route(`/${serviceName}/socket`).get((req, res) => {
+    res.sendFile('socket-test.html', { root: __dirname });
+  });
+
   router.use(ErrorsInterceptor);
   process.on('unhandledRejection', ErrorsInterceptor);
 
   app.use(basePath, router);
 
-  app.start = ({ port } = {}) => new Promise(resolve => {
-    const server = http.createServer(app);
+  const server = https.createServer({
+    key: fs.readFileSync(path.resolve('./.dev/key.pem'), 'utf-8'),
+    cert: fs.readFileSync(path.resolve('./.dev/cert.pem'), 'utf-8'),
+  }, app);
 
+  const io = Socket(server, app);
+
+  app.start = ({ port } = {}) => new Promise(resolve => {
     server.on('close', () => app.emit('close'));
 
     server.stop = async () => {
@@ -85,10 +105,10 @@ export default async ({
       await new Promise(resolve => server.close(resolve));
     };
 
-    server.listen(port, () => {
-      // eslint-disable-next-line no-console
-      !TEST && console.log(colors.cyan(
-        `[blinddeez.${serviceName}] Running on http://localhost:${port}`
+    server.listen(port, 'api.blinddeez.develop', () => {
+      console.log(colors.cyan(
+        `[blinddeez.${serviceName}] Running on ` +
+        `https://api.blinddeez.develop:${port}`
       ));
 
       resolve({ app, server, port });
