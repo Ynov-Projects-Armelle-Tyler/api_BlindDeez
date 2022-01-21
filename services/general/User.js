@@ -12,7 +12,7 @@ import {
 } from '@blinddeez/api-core/utils/errors';
 
 export const create = async (req, res) => {
-  const userInfo = assert(req.body.user, BadRequest('invalid_request'));
+  const username = assert(req.body.username, BadRequest('invalid_request'));
   const email = assert(req.body.email, BadRequest('email_format'), isEmail);
   const password = assert(req.body.password, BadRequest('invalid_request'));
 
@@ -23,7 +23,7 @@ export const create = async (req, res) => {
   }
 
   const user = await User.from({
-    ...userInfo,
+    username,
     email,
     password,
   });
