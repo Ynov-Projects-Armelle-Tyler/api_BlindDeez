@@ -89,6 +89,7 @@
   },
   "scripts": {
     "heroku-postbuild": "yarn build",
+    "start": "yarn serve",
     "mjml": "./node_modules/.bin/mjml",
     "lint": "./node_modules/.bin/eslint --max-warnings=0 .",
     "test": "./node_modules/.bin/jest --forceExit",
