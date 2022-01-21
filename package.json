@@ -88,6 +88,7 @@
     "yargs": "17.0.1"
   },
   "scripts": {
+    "heroku-postbuild": "yarn build",
     "mjml": "./node_modules/.bin/mjml",
     "lint": "./node_modules/.bin/eslint --max-warnings=0 .",
     "test": "./node_modules/.bin/jest --forceExit",
