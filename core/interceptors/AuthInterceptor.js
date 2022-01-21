@@ -4,7 +4,7 @@ import { Account } from '../models';
 import { Forbidden, Unauthorized } from '../utils/errors';
 import { TOKEN_KEY, TOKEN_NORMAL_EXPIRY } from '../utils/env';
 
-export default types => {
+export default () => {
   return async function AuthInterceptor (req, res, next) {
     const [authMode, authValue] = (req.get('authorization') || '').split(' ');
 
@@ -20,10 +20,6 @@ export default types => {
 
     if (!user) {
       throw Forbidden('authorization_error');
-    }
-
-    if (!types.includes(user.type)) {
-      throw Unauthorized('invalid_user_type');
     }
 
     try {

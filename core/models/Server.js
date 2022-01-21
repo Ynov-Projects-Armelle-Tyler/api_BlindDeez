@@ -4,9 +4,10 @@ const Server = new mongoose.Schema({
 
   users: [
     {
-      type:  mongoose.Schema.ObjectId, required: true, ref: 'User',
+      type: mongoose.Schema.ObjectId,
       required: true,
-    }
+      ref: 'User',
+    },
   ],
 
   name: {

@@ -1,7 +1,7 @@
-import {
-  AuthInterceptor,
-  IdentityInterceptor,
-} from '@blinddeez/api-core/interceptors';
+// import {
+//   AuthInterceptor,
+//   IdentityInterceptor,
+// } from '@blinddeez/api-core/interceptors';
 
 import * as User from '../User';
 
@@ -19,24 +19,24 @@ export default {
 
   'GET /general/user/:id': {
     interceptors: [
-      AuthInterceptor(),
-      IdentityInterceptor,
+      // AuthInterceptor(),
+      // IdentityInterceptor,
     ],
     handle: User.get,
   },
 
   'PUT /general/user/:id': {
     interceptors: [
-      AuthInterceptor(),
-      IdentityInterceptor,
+      // AuthInterceptor(),
+      // IdentityInterceptor,
     ],
     handle: User.update,
   },
 
   'DELETE /general/user/:id': {
     interceptors: [
-      AuthInterceptor(),
-      IdentityInterceptor,
+      // AuthInterceptor(),
+      // IdentityInterceptor,
     ],
     handle: User.remove,
   },

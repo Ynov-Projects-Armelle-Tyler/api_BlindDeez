@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Tuto WebSocket avec Socket.io et NodeJS par PracticalProgramming.fr</title>
+</head>
+
+<body>
+  <H1>Hello</H1>
+
+  <div class="content">
+    <h3>DEMO</h3>
+    <div id="demo"></div>
+    <button type="button" name="button" id="demo-btn">Send Demo</button>
+  </div>
+
+  <div class="content">
+    <h3>PLAYERS</h3>
+    <div id="add-delete-player"></div>
+  </div>
+
+
+  <!-- CREATION SOCKET -->
+  <script src="https://cdn.socket.io/4.4.1/socket.io.min.js" integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H" crossorigin="anonymous"></script>
+  <script>
+    const socket = io('https://api.blinddeez.develop:8001/');
+
+    const demo = document.querySelector('#demo-btn');
+    demo.addEventListener('click', e => {
+      socket.emit('key', 'hello world');
+    });
+
+    socket.on('key', data => {
+      const div = document.querySelector('#demo');
+      div.innerHTML = data;
+    })
+
+    socket.on('add_player', data => {
+      const div = document.querySelector('#add-delete-player');
+      div.innerHTML = JSON.stringify(data);
+    })
+
+    socket.on('delete_player', data => {
+      const div = document.querySelector('#add-delete-player');
+      div.innerHTML = '';
+    })
+  </script>
+
+  <!-- FIN CODE SOCKET -->
+</body>
+</html>

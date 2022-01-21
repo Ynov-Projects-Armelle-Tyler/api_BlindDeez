@@ -9,6 +9,8 @@ export default function ErrorsInterceptor (err, req, res, _next) {
     if (typeof err.send !== 'undefined') {
       return err.send(res);
     } else {
+      console.error(err);
+
       return isDebug
         ? res.status(500).send(`<pre>${err.stack}</pre>`)
         /* istanbul ignore next: cannot cover this in dev/test mode */

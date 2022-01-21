@@ -2,11 +2,11 @@ import * as Demo from '../Demo';
 
 export default {
 
-  'POST /general/feed': {
+  'GET /general/demo/socket': {
     interceptors: [
       // AuthInterceptor(types),
     ],
-    handle: Demo.feed,
+    handle: Demo.socket,
   },
 
   'POST /general/email': {

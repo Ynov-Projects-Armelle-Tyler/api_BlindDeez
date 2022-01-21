@@ -12,7 +12,7 @@ import {
 } from '@blinddeez/api-core/utils/errors';
 
 export const create = async (req, res) => {
-  const userInfo = assert(req.body.user, BadRequest('invalid_request'));
+  const username = assert(req.body.username, BadRequest('invalid_request'));
   const email = assert(req.body.email, BadRequest('email_format'), isEmail);
   const password = assert(req.body.password, BadRequest('invalid_request'));
 
@@ -23,21 +23,21 @@ export const create = async (req, res) => {
   }
 
   const user = await User.from({
-    ...userInfo,
+    username,
     email,
     password,
   });
 
   await user.save();
 
-  req.app.get('Sendgrid').send({
-    from: EMAIL_SENDER,
-    to: account.email,
-    subject: 'Welcome',
-    body: load('emails/welcome', {
-      user: `${user.username}`,
-    }),
-  });
+  // req.app.get('Sendgrid').send({
+  //   from: EMAIL_SENDER,
+  //   to: user.email,
+  //   subject: 'Welcome',
+  //   body: load('emails/welcome', {
+  //     user: `${user.username}`,
+  //   }),
+  // });
 
   res.json({ created: true });
 };
@@ -78,7 +78,7 @@ export const update = async (req, res) => {
   Object.assign(user, {
     ...userInfo,
     email,
-    password
+    password,
   });
 
   await user.save();

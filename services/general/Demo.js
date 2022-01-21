@@ -11,11 +11,13 @@ export const send = async (req, res) => {
   res.json({ send: true });
 };
 
-export const feed = async (req, res) => {
+export const socket = async (req, res) => {
 
   if (!__DEV__) {
     throw Forbidden();
   }
+
+  req.app.get('Socket').emit('key', 'send from API Controller !!');
 
   res.json({ created: true });
 };

@@ -1,3 +1,4 @@
+import { genSalt, hash } from 'bcrypt';
 import mongoose from 'mongoose';
 
 const User = new mongoose.Schema({
@@ -19,18 +20,15 @@ const User = new mongoose.Schema({
 
   google_id: {
     type: String,
-    required: true,
   },
 
   profile_img: {
     type: String,
-    required: true,
   },
 
-  favorites_tracks: {
-    type: String,
-    required: true,
-  },
+  favorites_tracks: [{
+    deezer_id: String,
+  }],
 
   percentage_success: {
     type: Number,
@@ -39,7 +37,18 @@ const User = new mongoose.Schema({
 
   notifications: {
     type: Boolean,
-    required: true,
+  },
+
+  access_token: {
+    type: String,
+  },
+
+  refresh_token: {
+    type: String,
+  },
+
+  refresh_token_salt: {
+    type: String,
   },
 
   created_at: {
@@ -50,6 +59,19 @@ const User = new mongoose.Schema({
 
 User.statics.from = function (opts) {
   return new this(opts);
+};
+
+User.pre('save', async function (next) {
+  if (this.isModified('password')) {
+    this.salt = await genSalt(10);
+    this.password = await hash(this.password, this.salt);
+  }
+
+  next();
+});
+
+User.methods.genSalt = async function () {
+  return await genSalt(10);
 };
 
 export default mongoose.model('User', User);
