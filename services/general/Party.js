@@ -52,12 +52,26 @@ export const getAll = async (req, res) => {
 };
 
 export const getAllPending = async (req, res) => {
-  const type = Party.schema.path('music_label').enumValues;
+  const types = Party.schema.path('music_label').enumValues;
+  const parties = [];
 
-  const parties = await Party.aggregate([
+  types.forEach(type => {
+    parties.push({ _id: type, count: 0 });
+  });
+
+  const partiesCount = await Party.aggregate([
     { $match: { status: 'pending' }},
     { $group: { _id: '$music_label', count: { $sum: 1 }}}
  ]);
+
+ partiesCount.forEach(label => {
+    const index = parties.findIndex(type => type._id === label._id);
+
+    parties[index] = {
+      _id: label._id,
+      count: label.count,
+    };
+ });
 
   res.json({ parties });
 };
