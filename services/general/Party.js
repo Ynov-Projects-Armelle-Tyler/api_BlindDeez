@@ -51,6 +51,42 @@ export const getAll = async (req, res) => {
   res.json({ parties });
 };
 
+export const getAllPending = async (req, res) => {
+  const types = Party.schema.path('music_label').enumValues;
+  const parties = [];
+
+  types.forEach(type => {
+    parties.push({ _id: type, count: 0 });
+  });
+
+  const partiesCount = await Party.aggregate([
+    { $match: { status: 'pending' }},
+    { $group: { _id: '$music_label', count: { $sum: 1 }}}
+ ]);
+
+ partiesCount.forEach(label => {
+    const index = parties.findIndex(type => type._id === label._id);
+
+    parties[index] = {
+      _id: label._id,
+      count: label.count,
+    };
+ });
+
+  res.json({ parties });
+};
+
+export const getPendingByMusicLabel = async (req, res) => {
+  const musicLabel = req.params.musicLabel;
+
+  const parties = assert(
+    await Party.find({ status: 'pending', music_label: musicLabel }),
+    NotFound('party_not_found')
+  );
+
+  res.json({ parties });
+};
+
 export const remove = async (req, res) => {
   const partyId = assert(req.params.id, BadRequest('wrong_party_id'),
     val => mongoose.Types.ObjectId.isValid(val));
