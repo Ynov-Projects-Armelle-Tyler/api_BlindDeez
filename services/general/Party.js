@@ -58,7 +58,7 @@ export const getAllPending = async (req, res) => {
   });
 
   const partiesCount = await Party.aggregate([
-    { $match: { status: 'pending' }},
+    { $match: { status: 'pending', public: true }},
     { $group: { _id: '$music_label', count: { $sum: 1 }}}
  ]);
 
@@ -78,7 +78,11 @@ export const getPendingByMusicLabel = async (req, res) => {
   const musicLabel = req.params.musicLabel;
 
   const parties = assert(
-    await Party.find({ status: 'pending', music_label: musicLabel }),
+    await Party.find({
+      status: 'pending',
+      music_label: musicLabel,
+      public: true,
+    }),
     NotFound('party_not_found')
   );
 

@@ -31,6 +31,12 @@ export default (httpsServer, app) => {
       log('bgRed', `[Socket] Error: ${err}`);
     });
 
+    // Party
+    socket.on('join_room_code', data => {
+      socket.join(data.id);
+      socket.to(data.id).emit('user_join_room', data.user);
+    });
+
   });
 
   return io;
