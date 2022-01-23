@@ -11,7 +11,6 @@ import {
 
 export const create = async (req, res) => {
   const party = assert(req.body.party, BadRequest('invalid_request'));
-  const socket = req.app.get('Socket');
 
   const masterUser = req?.decoded?.user_id
     ? assert(
@@ -24,7 +23,6 @@ export const create = async (req, res) => {
     master_user: masterUser,
   }).save();
 
-  socket.join(createdParty._id.toString());
   log('bgBlue', `${masterUser.username} Create a party`);
 
   res.json({ created: true, room: createdParty._id });
@@ -161,20 +159,14 @@ export const editPublic = async (req, res) => {
 };
 
 export const editPlayers = async (req, res, next) => {
-  const partyId = assert(req.params.id, BadRequest('wrong_party_id'),
-    val => mongoose.Types.ObjectId.isValid(val));
-
-  const party = assert(
-    await Party.findOne({ _id: partyId }),
-    NotFound('party_not_found')
-  );
+  const partyId = assert(req.params.id, BadRequest('wrong_party_id'));
 
   return req.app.get('Brute').prevent(req, res, async () => {
     try {
-      if (party.public) {
-        await editPlayersWithoutCode(req, res, party);
+      if (partyId !== 'code') {
+        await editPlayersWithoutCode(req, res);
       } else {
-        await editPlayersWithCode(req, res, party);
+        await editPlayersWithCode(req, res);
       }
     } catch (e) {
       next(e, req, res, next);
@@ -182,12 +174,15 @@ export const editPlayers = async (req, res, next) => {
   });
 };
 
-const editPlayersWithCode = async (req, res, party) => {
+const editPlayersWithCode = async (req, res) => {
   const player = assert(req.body.player, BadRequest('invalid_request'));
   const editType = assert(req.body.edit_type, BadRequest('invalid_request'));
   const code = assert(req.body.code, BadRequest('invalid_request'));
 
-  const socket = req.app.get('Socket');
+  const party = assert(
+    await Party.findOne({ code: code }),
+    NotFound('party_not_found')
+  );
 
   if (code !== party.code) {
     throw NotFound('wrong_code');
@@ -203,7 +198,6 @@ const editPlayersWithCode = async (req, res, party) => {
       if (!exist) {
         playersUpdated.push(player);
 
-        socket.to(party._id.toString()).emit('add_player', player);
       }
 
       break;
@@ -216,7 +210,6 @@ const editPlayersWithCode = async (req, res, party) => {
         playersUpdated = party.users.filter(
           obj => obj.username !== player.username);
 
-        socket.to(party._id.toString()).emit('delete_player', player);
       }
 
       break;
@@ -232,11 +225,17 @@ const editPlayersWithCode = async (req, res, party) => {
   res.json({ party });
 };
 
-const editPlayersWithoutCode = async (req, res, party) => {
+const editPlayersWithoutCode = async (req, res) => {
+  const partyId = assert(req.params.id, BadRequest('wrong_party_id'),
+    val => mongoose.Types.ObjectId.isValid(val));
+
+  const party = assert(
+    await Party.findOne({ _id: partyId }),
+    NotFound('party_not_found')
+  );
+
   const player = assert(req.body.player, BadRequest('invalid_request'));
   const editType = assert(req.body.edit_type, BadRequest('invalid_request'));
-
-  const socket = req.app.get('Socket');
 
   let playersUpdated = party.users;
 
@@ -248,7 +247,6 @@ const editPlayersWithoutCode = async (req, res, party) => {
       if (!exist) {
         playersUpdated.push(player);
 
-        socket.to(party._id.toString()).emit('add_player', player);
       }
 
       break;
@@ -261,7 +259,6 @@ const editPlayersWithoutCode = async (req, res, party) => {
         playersUpdated = party.users.filter(
           obj => obj.username !== player.username);
 
-        socket.to(party._id.toString()).emit('delete_player', player);
       }
 
       break;
