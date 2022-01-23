@@ -93,8 +93,7 @@
     "test": "./node_modules/.bin/jest --forceExit",
     "serve": "node ./script/serve.js",
     "start": "node ./script/run.js general",
-    "build": "node ./script/build.js",
-    "build:all": "yarn build --all",
+    "build": "node ./script/build.js --openssl-legacy-provider",
     "list-services": "node ./script/list-services.js",
     "configure": "node ./script/configure.js"
   },
