@@ -17,8 +17,6 @@ if (!argv._.length) {
   argv._ = [...listServices()];
 }
 
-process.on('SIGINT', process.exit);
-
 const buildConfig = webpackConfig({
   env: 'development',
 });
