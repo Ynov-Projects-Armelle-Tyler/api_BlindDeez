@@ -18,35 +18,45 @@ if (!argv._.length) {
 }
 
 const buildConfig = webpackConfig({
-  env: 'development',
+  env: 'production',
 });
 
-const compiler = webpack({
+webpack({
   ...buildConfig,
   entry: {
     general: './services/general/index.js',
   },
+}, (err, stats) => {
+  if (err || stats.hasErrors()) {
+    console.error(colors.red(err.stack || err));
+
+    if (err.details) {
+      console.error(colors.red(err.details));
+    }
+
+    process.exit(1);
+  }
 });
-
-const startWatcher = () => {
-  const serverPaths = Object
-    .keys(compiler.options.entry)
-    .map(entry =>
-      path.join(compiler.options.output.path, `${entry}.js`)
-    );
-
-  serverPaths
-    .map(entry => {
-      return spawn('./node_modules/.bin/nodemon', [
-        '-q',
-        '--watch', entry,
-        '--watch', path.resolve('.env'),
-        '--exec', `node -e "require('${path.resolve(entry)}').default({});"`,
-      ], { stdio: 'inherit' });
-    });
-};
-
-compiler.watch(buildConfig.watchOptions, once(err => {
-  if (err) return;
-  startWatcher();
-}));
+//
+// const startWatcher = () => {
+//   const serverPaths = Object
+//     .keys(compiler.options.entry)
+//     .map(entry =>
+//       path.join(compiler.options.output.path, `${entry}.js`)
+//     );
+//
+//   serverPaths
+//     .map(entry => {
+//       return spawn('./node_modules/.bin/nodemon', [
+//         '-q',
+//         '--watch', entry,
+//         '--watch', path.resolve('.env'),
+//         '--exec', `node -e "require('${path.resolve(entry)}').default({});"`,
+//       ], { stdio: 'inherit' });
+//     });
+// };
+//
+// compiler.watch(buildConfig.watchOptions, once(err => {
+//   if (err) return;
+//   startWatcher();
+// }));
