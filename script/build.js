@@ -1,11 +1,6 @@
-const path = require('path');
-const fs = require('fs');
-const { spawn } = require('child_process');
-
 const { argv } = require('yargs');
 const colors = require('colors/safe');
 const webpack = require('webpack');
-const { once } = require('ramda');
 
 const webpackConfig = require('../webpack.config.js');
 const listServices = require('./list-services');
