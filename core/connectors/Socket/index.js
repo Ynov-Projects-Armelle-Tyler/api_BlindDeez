@@ -2,6 +2,7 @@ import { Server } from 'socket.io';
 
 import log from '../../utils/log';
 import * as party from './party';
+import { Party } from '../../models';
 
 export default (httpsServer, app) => {
   const io = new Server(httpsServer, {
@@ -12,7 +13,8 @@ export default (httpsServer, app) => {
   });
 
   io.on('connect', socket => {
-    Object.values(party).forEach(func => func(socket));
+    // by default
+    socket.blinddeez = undefined;
 
     log('bgCyan', `[Socket] ${socket.id} Connected`);
 
@@ -23,8 +25,18 @@ export default (httpsServer, app) => {
       log('bgYellow', `[Socket] ${socket.id} Disconnecting`);
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
       log('bgGreen', `[Socket] ${socket.id} Disconnected`);
+
+      if (socket.blinddeez?.id) {
+        const party = await Party.findOne({ _id: socket.blinddeez.id });
+        party.users = party.users.filter(u =>
+          u.username !== socket.blinddeez.user.username);
+        await party.save();
+
+        socket.to(socket.blinddeez.id)
+          .emit('user_leave_room', socket.blinddeez.user);
+      }
     });
 
     socket.on('connect_error', err => {
@@ -33,8 +45,24 @@ export default (httpsServer, app) => {
 
     // Party
     socket.on('join_room_code', data => {
+      socket.blinddeez = data;
       socket.join(data.id);
       socket.to(data.id).emit('user_join_room', data.user);
+    });
+
+    socket.on('user_leave_room', async () => {
+      if (socket.blinddeez?.id) {
+        const party = await Party.findOne({ _id: socket.blinddeez.id });
+        party.users = party.users.filter(u =>
+          u.username !== socket.blinddeez.user.username);
+        await party.save();
+
+        socket.to(socket.blinddeez.id)
+          .emit('user_leave_room', {
+            socketId: socket.id,
+            user: socket.blinddeez.user,
+          });
+      }
     });
 
   });
