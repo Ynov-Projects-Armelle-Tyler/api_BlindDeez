@@ -65,6 +65,10 @@ export default (httpsServer, app) => {
       }
     });
 
+    socket.on('edit_party_visibility', data => {
+      socket.to(data.id).emit('edit_party_visibility');
+    });
+
   });
 
   return io;

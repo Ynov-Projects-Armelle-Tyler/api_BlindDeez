@@ -28,13 +28,10 @@ export default {
     handle: Party.getAllPending,
   },
 
- 'GET /general/party/pending/:musicLabel': {
-   interceptors: [
-     // AuthInterceptor(),
-     // IdentityInterceptor,
-   ],
-   handle: Party.getPendingByMusicLabel,
- },
+  'GET /general/party/pending/:musicLabel': {
+    interceptors: [],
+    handle: Party.getPendingByMusicLabel,
+  },
 
   'GET /general/party/:id': {
     interceptors: [

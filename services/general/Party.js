@@ -139,8 +139,6 @@ export const editPublic = async (req, res) => {
     val => mongoose.Types.ObjectId.isValid(val));
   const isPublic = assert(req.body.public, BadRequest('invalid_request'));
 
-  const socket = req.app.get('Socket');
-
   const party = assert(
     await Party.findOne({ _id: partyId }),
     NotFound('party_not_found')
@@ -149,13 +147,10 @@ export const editPublic = async (req, res) => {
   party.public = isPublic;
 
   if (isPublic && party?.code) {
-    delete party.code;
+    party.code = undefined;
   } else if (!isPublic) {
     party.code = Party.genCode();
   }
-
-  socket.to(party._id.toString())
-    .emit('edit_public', { isPublic, code: party.code });
 
   await party.save();
 
