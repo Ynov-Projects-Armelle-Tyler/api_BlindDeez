@@ -16,7 +16,7 @@ export default app => {
 
   /* istanbul ignore next: cannot test brute force in test mode anyways */
   app.set('Brute', new ExpressBrute(store, {
-    freeRetries: MAX_REQUEST_RETRIES,
+    freeRetries: 1000,
     minWait: 5000,
     failCallback: (req, res, next, nextValidRequestDate) =>
       TooManyRequests('too_many_requests', 'Too many requests', {

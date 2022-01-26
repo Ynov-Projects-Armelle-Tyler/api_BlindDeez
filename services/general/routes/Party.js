@@ -20,6 +20,19 @@ export default {
     handle: Party.getAll,
   },
 
+  'GET /general/party/pending': {
+    interceptors: [
+      // AuthInterceptor(),
+      // IdentityInterceptor,
+    ],
+    handle: Party.getAllPending,
+  },
+
+  'GET /general/party/pending/:musicLabel': {
+    interceptors: [],
+    handle: Party.getPendingByMusicLabel,
+  },
+
   'GET /general/party/:id': {
     interceptors: [
       // AuthInterceptor(),
@@ -58,6 +71,14 @@ export default {
       // IdentityInterceptor,
     ],
     handle: Party.editPlayers,
+  },
+
+  'PATCH /general/party/:id': {
+    interceptors: [
+      // AuthInterceptor(),
+      // IdentityInterceptor,
+    ],
+    handle: Party.playGame,
   },
 
 };
