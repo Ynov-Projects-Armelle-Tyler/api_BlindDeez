@@ -11,7 +11,6 @@ import {
 
 export const create = async (req, res) => {
   const party = assert(req.body.party, BadRequest('invalid_request'));
-  const socket = req.app.get('Socket');
 
   const masterUser = req?.decoded?.user_id
     ? assert(
@@ -22,10 +21,11 @@ export const create = async (req, res) => {
   const createdParty = await Party.from({
     ...party,
     master_user: masterUser,
-  }).save();
+  });
 
-  socket.join(createdParty._id.toString());
-  log('bgBlue', `${masterUser.username} Create a party`);
+  await createdParty.save();
+
+  log('bgBlue', `${masterUser} Create a party`);
 
   res.json({ created: true, room: createdParty._id });
 };
@@ -60,7 +60,7 @@ export const getAllPending = async (req, res) => {
   });
 
   const partiesCount = await Party.aggregate([
-    { $match: { status: 'pending' }},
+    { $match: { status: 'pending', public: true }},
     { $group: { _id: '$music_label', count: { $sum: 1 }}}
  ]);
 
@@ -80,7 +80,11 @@ export const getPendingByMusicLabel = async (req, res) => {
   const musicLabel = req.params.musicLabel;
 
   const parties = assert(
-    await Party.find({ status: 'pending', music_label: musicLabel }),
+    await Party.find({
+      status: 'pending',
+      music_label: musicLabel,
+      public: true,
+    }),
     NotFound('party_not_found')
   );
 
@@ -111,12 +115,27 @@ export const remove = async (req, res) => {
   res.json({ deleted: true });
 };
 
+export const playGame = async (req, res) => {
+  const partyId = assert(req.params.id, BadRequest('wrong_party_id'),
+    val => mongoose.Types.ObjectId.isValid(val));
+  const status = assert(req.body.status, BadRequest('invalid_request'));
+
+  const party = assert(
+    await Party.findOne({ _id: partyId }),
+    NotFound('party_not_found')
+  );
+
+  party.status = status;
+
+  await party.save();
+
+  res.json({ party });
+};
+
 export const editName = async (req, res) => {
   const partyId = assert(req.params.id, BadRequest('wrong_party_id'),
     val => mongoose.Types.ObjectId.isValid(val));
   const name = assert(req.body.name, BadRequest('invalid_request'));
-
-  const socket = req.app.get('Socket');
 
   const party = assert(
     await Party.findOne({ _id: partyId }),
@@ -124,8 +143,6 @@ export const editName = async (req, res) => {
   );
 
   party.name = name;
-
-  socket.emit('edit_name', name);
 
   await party.save();
 
@@ -137,8 +154,6 @@ export const editPublic = async (req, res) => {
     val => mongoose.Types.ObjectId.isValid(val));
   const isPublic = assert(req.body.public, BadRequest('invalid_request'));
 
-  const socket = req.app.get('Socket');
-
   const party = assert(
     await Party.findOne({ _id: partyId }),
     NotFound('party_not_found')
@@ -147,13 +162,10 @@ export const editPublic = async (req, res) => {
   party.public = isPublic;
 
   if (isPublic && party?.code) {
-    delete party.code;
+    party.code = undefined;
   } else if (!isPublic) {
     party.code = Party.genCode();
   }
-
-  socket.to(party._id.toString())
-    .emit('edit_public', { isPublic, code: party.code });
 
   await party.save();
 
@@ -161,20 +173,14 @@ export const editPublic = async (req, res) => {
 };
 
 export const editPlayers = async (req, res, next) => {
-  const partyId = assert(req.params.id, BadRequest('wrong_party_id'),
-    val => mongoose.Types.ObjectId.isValid(val));
-
-  const party = assert(
-    await Party.findOne({ _id: partyId }),
-    NotFound('party_not_found')
-  );
+  const partyId = assert(req.params.id, BadRequest('wrong_party_id'));
 
   return req.app.get('Brute').prevent(req, res, async () => {
     try {
-      if (party.public) {
-        await editPlayersWithoutCode(req, res, party);
+      if (partyId !== 'code') {
+        await editPlayersWithoutCode(req, res);
       } else {
-        await editPlayersWithCode(req, res, party);
+        await editPlayersWithCode(req, res);
       }
     } catch (e) {
       next(e, req, res, next);
@@ -182,12 +188,15 @@ export const editPlayers = async (req, res, next) => {
   });
 };
 
-const editPlayersWithCode = async (req, res, party) => {
+const editPlayersWithCode = async (req, res) => {
   const player = assert(req.body.player, BadRequest('invalid_request'));
   const editType = assert(req.body.edit_type, BadRequest('invalid_request'));
   const code = assert(req.body.code, BadRequest('invalid_request'));
 
-  const socket = req.app.get('Socket');
+  const party = assert(
+    await Party.findOne({ code: code }),
+    NotFound('party_not_found')
+  );
 
   if (code !== party.code) {
     throw NotFound('wrong_code');
@@ -203,7 +212,6 @@ const editPlayersWithCode = async (req, res, party) => {
       if (!exist) {
         playersUpdated.push(player);
 
-        socket.to(party._id.toString()).emit('add_player', player);
       }
 
       break;
@@ -216,7 +224,6 @@ const editPlayersWithCode = async (req, res, party) => {
         playersUpdated = party.users.filter(
           obj => obj.username !== player.username);
 
-        socket.to(party._id.toString()).emit('delete_player', player);
       }
 
       break;
@@ -232,11 +239,17 @@ const editPlayersWithCode = async (req, res, party) => {
   res.json({ party });
 };
 
-const editPlayersWithoutCode = async (req, res, party) => {
+const editPlayersWithoutCode = async (req, res) => {
+  const partyId = assert(req.params.id, BadRequest('wrong_party_id'),
+    val => mongoose.Types.ObjectId.isValid(val));
+
+  const party = assert(
+    await Party.findOne({ _id: partyId }),
+    NotFound('party_not_found')
+  );
+
   const player = assert(req.body.player, BadRequest('invalid_request'));
   const editType = assert(req.body.edit_type, BadRequest('invalid_request'));
-
-  const socket = req.app.get('Socket');
 
   let playersUpdated = party.users;
 
@@ -248,7 +261,6 @@ const editPlayersWithoutCode = async (req, res, party) => {
       if (!exist) {
         playersUpdated.push(player);
 
-        socket.to(party._id.toString()).emit('add_player', player);
       }
 
       break;
@@ -261,7 +273,6 @@ const editPlayersWithoutCode = async (req, res, party) => {
         playersUpdated = party.users.filter(
           obj => obj.username !== player.username);
 
-        socket.to(party._id.toString()).emit('delete_player', player);
       }
 
       break;

@@ -28,13 +28,10 @@ export default {
     handle: Party.getAllPending,
   },
 
- 'GET /general/party/pending/:musicLabel': {
-   interceptors: [
-     // AuthInterceptor(),
-     // IdentityInterceptor,
-   ],
-   handle: Party.getPendingByMusicLabel,
- },
+  'GET /general/party/pending/:musicLabel': {
+    interceptors: [],
+    handle: Party.getPendingByMusicLabel,
+  },
 
   'GET /general/party/:id': {
     interceptors: [
@@ -74,6 +71,14 @@ export default {
       // IdentityInterceptor,
     ],
     handle: Party.editPlayers,
+  },
+
+  'PATCH /general/party/:id': {
+    interceptors: [
+      // AuthInterceptor(),
+      // IdentityInterceptor,
+    ],
+    handle: Party.playGame,
   },
 
 };

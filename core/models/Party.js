@@ -74,7 +74,6 @@ const Party = new mongoose.Schema({
   public: {
     type: Boolean,
     default: true,
-    required: true,
   },
 
   code: {
@@ -82,7 +81,21 @@ const Party = new mongoose.Schema({
   },
 
   tracks: [{
-    type: String,
+    url: {
+      type: String,
+    },
+
+    title: {
+      type: String,
+    },
+
+    cover: {
+      type: String,
+    },
+
+    band: {
+      type: String,
+    },
   }],
 
   status: {
