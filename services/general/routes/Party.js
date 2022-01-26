@@ -73,4 +73,12 @@ export default {
     handle: Party.editPlayers,
   },
 
+  'PATCH /general/party/:id': {
+    interceptors: [
+      // AuthInterceptor(),
+      // IdentityInterceptor,
+    ],
+    handle: Party.playGame,
+  },
+
 };

@@ -1,6 +1,7 @@
 import { Server } from 'socket.io';
 
 import log from '../../utils/log';
+import { sleep } from '../../utils/helpers';
 import * as party from './party';
 import { Party } from '../../models';
 
@@ -67,6 +68,38 @@ export default (httpsServer, app) => {
 
     socket.on('edit_party_visibility', data => {
       socket.to(data.id).emit('edit_party_visibility');
+    });
+
+    socket.on('master_launch_game', data => {
+      io.to(data.id).emit('master_launch_game');
+    });
+
+    // On Game
+
+    socket.on('party_loaded', data => {
+      io.to(data.id).emit('start_party');
+    });
+
+    socket.on('player_trying', data => {
+      io.to(data.id).emit('player_trying', data);
+    });
+
+    socket.on('player_not_found', data => {
+      io.to(data.id).emit('player_not_found', data);
+    });
+
+    socket.on('player_found', async data => {
+      io.to(data.id).emit('player_found', data);
+      await sleep(500);
+      io.to(data.id).emit('next_track', data);
+    });
+
+    socket.on('next_track', data => {
+      io.to(data.id).emit('next_track', data);
+    });
+
+    socket.on('end_of_party', data => {
+      io.to(data.id).emit('end_of_party', data);
     });
 
   });

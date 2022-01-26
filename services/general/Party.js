@@ -21,9 +21,11 @@ export const create = async (req, res) => {
   const createdParty = await Party.from({
     ...party,
     master_user: masterUser,
-  }).save();
+  });
 
-  log('bgBlue', `${masterUser.username} Create a party`);
+  await createdParty.save();
+
+  log('bgBlue', `${masterUser} Create a party`);
 
   res.json({ created: true, room: createdParty._id });
 };
@@ -113,12 +115,27 @@ export const remove = async (req, res) => {
   res.json({ deleted: true });
 };
 
+export const playGame = async (req, res) => {
+  const partyId = assert(req.params.id, BadRequest('wrong_party_id'),
+    val => mongoose.Types.ObjectId.isValid(val));
+  const status = assert(req.body.status, BadRequest('invalid_request'));
+
+  const party = assert(
+    await Party.findOne({ _id: partyId }),
+    NotFound('party_not_found')
+  );
+
+  party.status = status;
+
+  await party.save();
+
+  res.json({ party });
+};
+
 export const editName = async (req, res) => {
   const partyId = assert(req.params.id, BadRequest('wrong_party_id'),
     val => mongoose.Types.ObjectId.isValid(val));
   const name = assert(req.body.name, BadRequest('invalid_request'));
-
-  const socket = req.app.get('Socket');
 
   const party = assert(
     await Party.findOne({ _id: partyId }),
@@ -126,8 +143,6 @@ export const editName = async (req, res) => {
   );
 
   party.name = name;
-
-  socket.emit('edit_name', name);
 
   await party.save();
 
