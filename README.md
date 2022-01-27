@@ -8,7 +8,7 @@
 
 ### Pre-requisites
 
-- [Node](https://nodejs.org/en/download/package-manager/) >= 12
+- [Node](https://nodejs.org/en/download/package-manager/) >= 16
 - [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/#debian-stable) >= 1
 - [MongoDB](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/)
 

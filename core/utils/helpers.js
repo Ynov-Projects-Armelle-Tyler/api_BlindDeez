@@ -20,3 +20,6 @@ export const exists = v => !isNull(v) && !isUndefined(v);
 export const isNumber = val => typeof val === 'number';
 
 export const isFinite = val => isNumber(val) && !isNaN(val) && val !== Infinity;
+
+export const sleep = time =>
+  new Promise(resolve => setTimeout(resolve, time));

@@ -2,7 +2,7 @@ import './config';
 
 import fs from 'fs';
 import path from 'path';
-// import http from 'http';
+import http from 'http';
 import https from 'https';
 import events from 'events';
 
@@ -90,10 +90,7 @@ export default async ({
 
   app.use(basePath, router);
 
-  const server = https.createServer({
-    key: fs.readFileSync(path.resolve('./.dev/key.pem'), 'utf-8'),
-    cert: fs.readFileSync(path.resolve('./.dev/cert.pem'), 'utf-8'),
-  }, app);
+  const server = http.createServer(app);
 
   const io = Socket(server, app);
 
@@ -108,7 +105,7 @@ export default async ({
     server.listen(port, 'api.blinddeez.develop', () => {
       console.log(colors.cyan(
         `[blinddeez.${serviceName}] Running on ` +
-        `https://api.blinddeez.develop:${port}`
+        `http://api.blinddeez.develop:${port}`
       ));
 
       resolve({ app, server, port });
